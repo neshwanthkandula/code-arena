@@ -1,0 +1,90 @@
+from fastapi import FastAPI, Depends,HTTPException
+from sqlalchemy.orm import Session
+from pathlib import Path 
+import json 
+from fastapi.middleware.cors import CORSMiddleware
+from app.database import sessionLocal 
+from app import crud,schema
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+# Allow all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
+
+
+PROBLEMS_PATH = Path(".\problems")
+if not PROBLEMS_PATH.exists():
+   print("Warning: Problems path does not exist.")
+else:
+    print("valid path")
+
+def get_db():
+    db = sessionLocal()
+    try:
+        yield db
+    finally :
+        db.close()
+
+
+@app.post("/admin/sync")
+def sync_problems(db: Session = Depends(get_db)):
+
+    if not PROBLEMS_PATH.exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"Problems directory not found: {PROBLEMS_PATH}"
+        )
+    
+    print("Syncing problems from:", PROBLEMS_PATH)
+    for folder in PROBLEMS_PATH.iterdir():
+        if not folder.is_dir():
+            continue
+
+        meta_path = folder / "metadata.json"
+        print("Reading metadata from:", meta_path)
+        if not meta_path.exists():
+            continue
+
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        print(meta)
+        crud.upsert_problem(db, {
+            "slug": meta["slug"],
+            "title": meta["title"],
+            "status": "published"
+        })
+
+    return {"message": "sync completed"}
+
+
+
+@app.get("/problems", response_model=list[schema.ProblemOut])
+def list_problems(db: Session = Depends(get_db)):
+    return crud.get_problems(db)
+
+@app.get("/problem/{slug}")
+def get_problem(slug : str, db : Session = Depends(get_db)):
+    problem = crud.get_problems_by_slug(db, slug)
+    
+    if not problem:
+        raise HTTPException(status_code=404, detail="problem not found")
+    
+    md_path = PROBLEMS_PATH/slug/"problem.md"
+    if not md_path.exists():
+        raise HTTPException(status_code=500, detail="problem statement not found")
+    
+    data =  {
+        "slug" : problem.slug,
+        "title": problem.title,
+        "statement": md_path.read_text()
+    }
+    return JSONResponse(
+      content = data,
+      media_type="application/json"
+    )
+
