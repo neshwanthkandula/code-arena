@@ -6,8 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import sessionLocal 
 from app import crud,schema
 from fastapi.responses import JSONResponse
+from app.services.judge_runner import judge_problem
+from app.models import Submission
+from app.auth.middleware import get_user
+from app.auth.routes.auth import router as auth_router 
 
 app = FastAPI()
+app.include_router(auth_router)
+
 # Allow all origins
 app.add_middleware(
     CORSMiddleware,
@@ -87,4 +93,35 @@ def get_problem(slug : str, db : Session = Depends(get_db)):
       content = data,
       media_type="application/json"
     )
+
+
+@app.post("/submit")
+async def submit(payload : schema.SubmitRequest, user_id = Depends(get_user), db: Session = Depends(get_db)):
+    print(user_id)
+    
+    try:
+        # result = await judge_problem(
+        #     payload.problem_slug,
+        #     payload.source_code,
+        #     payload.language_id
+        # )
+
+        # submission = Submission(
+        #     user_id=user_id,  # temporary
+        #     problem_slug=payload.problem_slug,
+        #     source_code=payload.source_code,
+        #     language_id=payload.language_id,
+        #     verdict=result["verdict"]
+        # )
+
+        # db.add(submission)
+        # db.commit()
+        # db.refresh(submission)
+        
+        # return result
+        return {"message ok"}
+    except Exception as e : 
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 

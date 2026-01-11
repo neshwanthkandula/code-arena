@@ -9,6 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@monaco-editor/react": "^4.7.0",
+    "@next/mdx": "^16.1.1",
+    "@types/mdx": "^2.0.13",
     "axios": "^1.13.2",
     "github-markdown-css": "^5.8.1",
     "next": "16.1.1",
