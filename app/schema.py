@@ -31,3 +31,18 @@ class LoginRequest(BaseModel):
 
     class Config:
         orm_mode = True
+
+class CreateContestRequest(BaseModel):
+    constest_id : str
+
+    class Config:
+        orm_mode = True
+
+class ContestSubmitRequest(BaseModel):
+    problem_slug : str
+    source_code : str
+    language_id : int
+
+    class Config:
+        orm_mode = True
+
