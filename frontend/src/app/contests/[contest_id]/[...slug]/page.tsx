@@ -7,19 +7,17 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeHighlight from "rehype-highlight"
 import Editor from "@monaco-editor/react"
-import ProblemSubmitButton from "../../../../components/ui/problemsubmitbutton"
+import SubmitButton from "../../../../../components/ui/submitbutton"
 import "highlight.js/styles/github.css"
 
 interface Problem {
   slug: string
   title: string
   statement: string
-  difficulty?: string
-  tags?: string[]
 }
 
 export default function ProblemPage() {
-  const params = useParams()
+   const params = useParams()
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug
 
   const [problem, setProblem] = useState<Problem | null>(null)
@@ -30,7 +28,7 @@ export default function ProblemPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await axios.get(`http://127.0.0.1:8000/problem/${slug}`)
+        const res = await axios.get(`http://127.0.0.1:8000/contest/problem/${slug}`)
         setProblem(res.data)
       } catch (err) {
         console.error("Failed to load problem", err)
@@ -77,7 +75,7 @@ export default function ProblemPage() {
             </select>
 
 
-            <ProblemSubmitButton
+            <SubmitButton
               problemSlug={slug as string}
               sourceCode={code}
               languageId={languageId}

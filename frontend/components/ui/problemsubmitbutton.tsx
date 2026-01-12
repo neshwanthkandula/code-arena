@@ -10,7 +10,7 @@ interface SubmitButtonProps {
   onResult: (result: any) => void
 }
 
-export default function SubmitButton({
+export default function ProblemSubmitButton({
   problemSlug,
   sourceCode,
   languageId,
@@ -29,7 +29,7 @@ export default function SubmitButton({
       setLoading(true)
       setError(null)
 
-      const result = await contest_submitCode({
+      const result = await submitCode({
         problem_slug: problemSlug,
         source_code: sourceCode,
         language_id: languageId

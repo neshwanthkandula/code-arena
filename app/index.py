@@ -104,25 +104,25 @@ async def submit(payload : schema.SubmitRequest, user_id = Depends(get_user), db
     print(user_id)
     
     try:
-        result = await judge_problem(
-            payload.problem_slug,
-            payload.source_code,
-            payload.language_id
-        )
+        # result = await judge_problem(
+        #     payload.problem_slug,
+        #     payload.source_code,
+        #     payload.language_id
+        # )
 
         submission = Submission(
             user_id=user_id,  # temporary
             problem_slug=payload.problem_slug,
             source_code=payload.source_code,
             language_id=payload.language_id,
-            verdict=result["verdict"]
+            verdict="wrong"
         )
 
         db.add(submission)
         db.commit()
         db.refresh(submission)
         
-        return result
+        return {"message" : "ok"}
     except Exception as e : 
         raise HTTPException(status_code=400, detail=str(e))
 

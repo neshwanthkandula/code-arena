@@ -5,6 +5,6 @@
   "memoryLimit": 256,
   "status": "contest",
   "contest_id" : "contest-132",
-  "duration" : 2000,
+  "duration" : "2000",
   "startTime" : "2334-05-06T12:00:00"
 }
