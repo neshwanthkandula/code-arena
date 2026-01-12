@@ -1,6 +1,6 @@
 # init_db.py
 from app.database import Base, engine
-from app.models import User, Problem, Submission
+from app.models import User, Problem, Submission, Contest
 
 def init_database():
     Base.metadata.create_all(engine)
