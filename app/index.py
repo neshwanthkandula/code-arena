@@ -11,10 +11,13 @@ from app.models import Submission
 from app.auth.middleware import get_user
 from app.auth.routes.auth import router as auth_router 
 from app.contest.routes import router as contest_router
+from app.leaderboard.routes.leaderboard import router as leaderboard_router
+from app.leaderboard.function import persist_leaderboard,reset_leaderboard
 
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(contest_router)
+app.include_router(leaderboard_router)
 
 # Allow all origins
 app.add_middleware(
@@ -124,4 +127,14 @@ async def submit(payload : schema.SubmitRequest, user_id = Depends(get_user), db
         raise HTTPException(status_code=400, detail=str(e))
 
 
+from app.models import Contest
+@app.post("/end/{contest_id}")
+def end_contest(contest_id : str, db: Session = Depends(get_db)):
+    persist_leaderboard(contest_id, db)
+    reset_leaderboard
 
+    
+    return {
+        "message"  : "contest ended",
+        "contest_id" : contest_id
+    }

@@ -12,6 +12,7 @@ from app.auth.middleware import get_user
 from app.contest.function import get_contest_state,get_problem_points
 from app.models import Contest,Submission
 from app.services.judge_runner import judge_problem
+from app.leaderboard.function import add_points
 
 router = APIRouter(prefix="/contest", tags=["contest"])
 def get_db():
@@ -173,6 +174,8 @@ async def submit_code(payload : ContestSubmitRequest, user_id:int = Depends(get_
         language_id=payload.language_id,
         problem_slug = payload.problem_slug
     )
+
+    add_points(user_id, points)  #add points to leaderboard
 
     db.add(submission)
     db.commit()
