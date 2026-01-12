@@ -1,7 +1,7 @@
 from fastapi import FastAPI,APIRouter, HTTPException, Request, Response , Depends
 from sqlalchemy.orm import Session
 from app.database import sessionLocal
-from app.models import Problem
+from app.models import Problem,Contest
 from app.schema import CreateContestRequest,ContestSubmitRequest
 from pathlib import Path
 import json 
@@ -65,8 +65,7 @@ def create_contest(db: Session = Depends(get_db)):
 
 @router.get("/")
 def list_contests(db: Session = Depends(get_db)):
-    contests = db.query(Problem.contest_id).filter(Problem.status == "contest").distinct().all()
-    contests = [row[0] for row in contests]
+    contests = db.query(Contest).all()
     return contests
 
 @router.get("/{contest_id}/problems")
@@ -126,6 +125,7 @@ def get_problem(slug: str, db: Session = Depends(get_db)):
 async def submit_code(payload : ContestSubmitRequest, user_id:int = Depends(get_user), db: Session = Depends(get_db)):
     problem = db.query(Problem).filter_by(slug=payload.problem_slug).first()
 
+    
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found")
 
@@ -175,7 +175,8 @@ async def submit_code(payload : ContestSubmitRequest, user_id:int = Depends(get_
         problem_slug = payload.problem_slug
     )
 
-    add_points(user_id, points)  #add points to leaderboard
+    # add 0 points if already submitted skip adding points
+    # add_points(user_id, points)  #add points to leaderboard
 
     db.add(submission)
     db.commit()

@@ -1,6 +1,6 @@
 from app.leaderboard.redis_client import redis_client
 from sqlalchemy.orm import Session
-from app.models import Leaderboard
+from app.models import Leaderboard,Contest
 
 LEADERBOARD_KEY = "leaderboard"
 
@@ -8,7 +8,13 @@ def add_points(user_id : int, points : int):
     redis_client.zincrby(LEADERBOARD_KEY, points, user_id)
 
 
-def get_leaderboard():
+def ensure_contest_exists(contest_id: str, db: Session):
+    contest = db.query(Contest).filter(Contest.contest_id == contest_id).first()
+    if not contest:
+        raise ValueError("Invalid contest_id")
+
+def get_leaderboard_from_redis():
+     
     raw = redis_client.zrevrange(
         LEADERBOARD_KEY,
         0,
@@ -29,7 +35,7 @@ def get_leaderboard():
     return leaderboard
 
 
-def get_user_rank(user_id : int):
+def get_user_rank_from_redis(user_id : int):
     rank = redis_client.zrevrank(LEADERBOARD_KEY, user_id)
     score = redis_client.zscore(LEADERBOARD_KEY, user_id)
 
@@ -40,6 +46,42 @@ def get_user_rank(user_id : int):
     return {
         "rank" : rank+1,
         "points" : int(score)
+    }
+
+def get_leaderboard_from_db(contest_id: str, db: Session):
+    rows = (
+        db.query(Leaderboard)
+        .filter(Leaderboard.contest_id == contest_id)
+        .order_by(Leaderboard.rank.asc())
+        .all()
+    )
+
+    return [
+        {
+            "rank": row.rank,
+            "user_id": row.user_id,
+            "points": row.total_points
+        }
+        for row in rows
+    ]
+
+
+def get_user_rank_from_db(contest_id: str, user_id: int, db: Session):
+    row = (
+        db.query(Leaderboard)
+        .filter(
+            Leaderboard.contest_id == contest_id,
+            Leaderboard.user_id == user_id
+        )
+        .first()
+    )
+
+    if not row:
+        return None
+
+    return {
+        "rank": row.rank,
+        "points": row.total_points
     }
 
 
@@ -69,4 +111,30 @@ def persist_leaderboard(contest_id : str, db: Session):
     db.commit()
 
 
-    
+def get_leaderboard(contest_id: str, db: Session):
+    ensure_contest_exists(contest_id, db)
+
+    rows = db.query(Leaderboard).filter(Leaderboard.contest_id == contest_id).first()
+
+    if rows:
+        return get_leaderboard_from_db(contest_id, db)
+
+    return get_leaderboard_from_redis()
+
+
+def get_user_rank(contest_id: str, user_id: int, db: Session):
+    ensure_contest_exists(contest_id, db)
+
+    row = (
+        db.query(Leaderboard)
+        .filter(
+            Leaderboard.contest_id == contest_id,
+            Leaderboard.user_id == user_id
+        )
+        .first()
+    )
+
+    if row:
+        return get_user_rank_from_db(contest_id, user_id, db)
+
+    return get_user_rank_from_redis(user_id)

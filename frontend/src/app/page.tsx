@@ -1,7 +1,7 @@
 export default function Home() {
   return (
     <main className="p-6">
-      <h1 className="text-2xl font-bold">Codeforces Clone</h1>
+      <h1 className="text-2xl font-bold">hii</h1>
     </main>
   );
 }

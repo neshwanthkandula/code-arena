@@ -39,7 +39,10 @@ def signup(payload : SignupRequest, response : Response, db: Session = Depends(g
     response.set_cookie(
         key = "token",
         value = token,
-        httponly = True
+        httponly = True,
+        secure=False,         # REQUIRED for SameSite=None
+        samesite="lax",     # REQUIRED for cross-site
+        path="/"
     )
 
     return { "messages" : "Signup successful"}
@@ -55,7 +58,10 @@ def login(payload : LoginRequest , response : Response , db : Session = Depends(
     response.set_cookie(
         key = "token",
         value = token,
-        httponly=True
+        httponly=True,
+        secure=False,         # REQUIRED for SameSite=None
+        samesite="lax",     # REQUIRED for cross-site
+        path="/"
     )
 
     return { "message" : "Login successful"}
